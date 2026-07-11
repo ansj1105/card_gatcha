@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import type { CSSProperties, MouseEvent } from "react";
 import { holoPresets } from "./holoPresets";
 import type { HoloCardProps } from "./types";
 import { useCardTilt } from "./useCardTilt";
@@ -31,11 +31,11 @@ export function HoloCard({
     gyroTilt: gyro.tilt
   });
 
-  const handleClick = async () => {
+  const handleClick = async (event: MouseEvent<HTMLButtonElement>) => {
     if (enableGyro && gyro.permission === "prompt") {
       await gyro.requestPermission();
     }
-    onClick?.();
+    onClick?.(event);
   };
 
   const style = {

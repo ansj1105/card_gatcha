@@ -1,3 +1,5 @@
+import type { MouseEvent } from "react";
+
 export type HoloGrade = "COM" | "MID" | "ADV" | "RAR" | "HER" | "LEG" | "MYT";
 
 export type HoloQuality = "low" | "high";
@@ -31,7 +33,7 @@ export type HoloCardProps = {
   enableGyro?: boolean;
   flipped?: boolean;
   disabled?: boolean;
-  onClick?: () => void;
+  onClick?: (event: MouseEvent<HTMLButtonElement>) => void;
   quality?: HoloQuality;
   effect?: HoloEffect;
 };
