@@ -1,9 +1,15 @@
 import { useState } from "react";
 import type { CSSProperties } from "react";
+import { assetPath } from "./assetPath";
 import { demoCards } from "./cardCatalog";
 import { HoloCard } from "./HoloCard";
 import { holoPresets } from "./holoPresets";
 import type { HoloEffect, HoloQuality } from "./types";
+
+const cardBackSrc = assetPath("assets/nft-card/cards/back/korion-card-back.webp");
+const foilMaskSrc = assetPath("assets/nft-card/masks/korion-foil-mask.png");
+const frameMaskSrc = assetPath("assets/nft-card/masks/korion-frame-mask.png");
+const artMaskSrc = assetPath("assets/nft-card/masks/korion-art-mask.png");
 
 const effectOptions: { id: HoloEffect; label: string }[] = [
   { id: "premium", label: "Premium Real" },
@@ -72,7 +78,7 @@ export function HoloCardDemo() {
           >
             <HoloCard
               frontSrc={card.frontSrc}
-              backSrc="/assets/nft-card/cards/back/korion-card-back.webp"
+              backSrc={cardBackSrc}
               grade={card.grade}
               alt={`Open ${card.grade} KORION card`}
               interactive
@@ -80,9 +86,9 @@ export function HoloCardDemo() {
               flipped={!openedCardIds.has(card.id)}
               quality="low"
               effect={openedCardIds.has(card.id) ? effect : "premium"}
-              foilMaskSrc="/assets/nft-card/masks/korion-foil-mask.png"
-              frameMaskSrc="/assets/nft-card/masks/korion-frame-mask.png"
-              artMaskSrc="/assets/nft-card/masks/korion-art-mask.png"
+              foilMaskSrc={foilMaskSrc}
+              frameMaskSrc={frameMaskSrc}
+              artMaskSrc={artMaskSrc}
               onClick={() => handleSmallCardClick(card.id)}
             />
             <span>{card.grade}</span>
@@ -139,10 +145,10 @@ export function HoloCardDemo() {
             <div className="reveal-card-wrap">
               <HoloCard
                 frontSrc={selectedCard.frontSrc}
-                backSrc="/assets/nft-card/cards/back/korion-card-back.webp"
-                foilMaskSrc="/assets/nft-card/masks/korion-foil-mask.png"
-                frameMaskSrc="/assets/nft-card/masks/korion-frame-mask.png"
-                artMaskSrc="/assets/nft-card/masks/korion-art-mask.png"
+                backSrc={cardBackSrc}
+                foilMaskSrc={foilMaskSrc}
+                frameMaskSrc={frameMaskSrc}
+                artMaskSrc={artMaskSrc}
                 grade={selectedCard.grade}
                 alt={`KORION ${selectedCard.grade} ${selectedCard.name} holographic card`}
                 interactive={interactive}
