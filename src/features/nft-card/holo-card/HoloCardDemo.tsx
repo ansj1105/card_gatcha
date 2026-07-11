@@ -23,6 +23,12 @@ const effectOptions: { id: HoloEffect; label: string }[] = [
   { id: "shatter", label: "Shatter" }
 ];
 
+const asset = (path: string) => `${import.meta.env.BASE_URL}${path}`;
+const cardBackSrc = asset("assets/nft-card/cards/back/korion-card-back.webp");
+const foilMaskSrc = asset("assets/nft-card/masks/korion-foil-mask.png");
+const frameMaskSrc = asset("assets/nft-card/masks/korion-frame-mask.png");
+const artMaskSrc = asset("assets/nft-card/masks/korion-art-mask.png");
+
 type RevealStart = {
   x: number;
   y: number;
@@ -242,7 +248,7 @@ export function HoloCardDemo() {
           >
             <HoloCard
               frontSrc={card.frontSrc}
-              backSrc="/assets/nft-card/cards/back/korion-card-back.webp"
+              backSrc={cardBackSrc}
               grade={card.grade}
               alt={`Open ${card.grade} KORION card`}
               interactive
@@ -250,9 +256,9 @@ export function HoloCardDemo() {
               flipped={!openedCardIds.has(card.id)}
               quality="low"
               effect={openedCardIds.has(card.id) ? effect : "premium"}
-              foilMaskSrc="/assets/nft-card/masks/korion-foil-mask.png"
-              frameMaskSrc="/assets/nft-card/masks/korion-frame-mask.png"
-              artMaskSrc="/assets/nft-card/masks/korion-art-mask.png"
+              foilMaskSrc={foilMaskSrc}
+              frameMaskSrc={frameMaskSrc}
+              artMaskSrc={artMaskSrc}
               onClick={(event) => handleSmallCardClick(card.id, event)}
             />
             {openedCardIds.has(card.id) && (
@@ -331,10 +337,10 @@ export function HoloCardDemo() {
               <div className="reveal-card-wrap">
                 <HoloCard
                   frontSrc={outgoingCard.frontSrc}
-                  backSrc="/assets/nft-card/cards/back/korion-card-back.webp"
-                  foilMaskSrc="/assets/nft-card/masks/korion-foil-mask.png"
-                  frameMaskSrc="/assets/nft-card/masks/korion-frame-mask.png"
-                  artMaskSrc="/assets/nft-card/masks/korion-art-mask.png"
+                  backSrc={cardBackSrc}
+                  foilMaskSrc={foilMaskSrc}
+                  frameMaskSrc={frameMaskSrc}
+                  artMaskSrc={artMaskSrc}
                   grade={outgoingCard.grade}
                   alt={`KORION ${outgoingCard.grade} ${outgoingCard.name} holographic card`}
                   interactive={false}
@@ -377,10 +383,10 @@ export function HoloCardDemo() {
             <div className="reveal-card-wrap">
               <HoloCard
                 frontSrc={selectedCard.frontSrc}
-                backSrc="/assets/nft-card/cards/back/korion-card-back.webp"
-                foilMaskSrc="/assets/nft-card/masks/korion-foil-mask.png"
-                frameMaskSrc="/assets/nft-card/masks/korion-frame-mask.png"
-                artMaskSrc="/assets/nft-card/masks/korion-art-mask.png"
+                backSrc={cardBackSrc}
+                foilMaskSrc={foilMaskSrc}
+                frameMaskSrc={frameMaskSrc}
+                artMaskSrc={artMaskSrc}
                 grade={selectedCard.grade}
                 alt={`KORION ${selectedCard.grade} ${selectedCard.name} holographic card`}
                 interactive={interactive}
