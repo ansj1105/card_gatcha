@@ -191,17 +191,42 @@
 }
 
 .frame-foil-layer {
-  opacity: calc(var(--card-opacity) * var(--holo-intensity) * 0.86);
+  opacity: calc(var(--card-opacity) * var(--holo-intensity) * 0.58);
   background:
-    linear-gradient(105deg, transparent 24%, rgba(255, 255, 255, 0.72), transparent 42%),
-    conic-gradient(from calc((var(--pointer-from-left) - .5) * 90deg), transparent, var(--holo-foil), rgba(255,255,255,.7), transparent, var(--holo-foil), transparent);
-  background-position: var(--background-x) var(--background-y);
-  background-size: 230% 230%, 160% 160%;
-  mix-blend-mode: screen;
+    radial-gradient(
+      circle at var(--pointer-x) var(--pointer-y),
+      rgba(255,255,255,.46),
+      transparent 22%
+    ),
+    linear-gradient(
+      calc(108deg + (var(--pointer-from-left) - .5) * 28deg),
+      transparent 0 28%,
+      rgba(255,255,255,.42) 34%,
+      var(--holo-foil) 39%,
+      transparent 48% 100%
+    ),
+    conic-gradient(
+      from calc((var(--pointer-from-left) - .5) * 90deg),
+      transparent,
+      color-mix(in srgb, var(--holo-foil), transparent 44%),
+      rgba(255,255,255,.34),
+      transparent,
+      color-mix(in srgb, var(--holo-foil), transparent 54%),
+      transparent
+    );
+  background-position:
+    var(--pointer-x) var(--pointer-y),
+    var(--background-x) var(--background-y),
+    calc(100% - var(--background-x)) calc(100% - var(--background-y));
+  background-size: 150% 150%, 260% 260%, 190% 190%;
+  background-blend-mode: soft-light, screen, overlay;
+  mix-blend-mode: soft-light;
   mask-image: var(--frame-mask);
   mask-size: cover;
+  mask-mode: alpha;
   -webkit-mask-image: var(--frame-mask);
   -webkit-mask-size: cover;
+  -webkit-mask-mode: alpha;
 }
 
 .spectrum-layer {
@@ -752,7 +777,8 @@
 
 .sealed-card-slot.is-focusing .holo-card,
 .sealed-card-slot.is-focusing .card-name-label {
-  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .sealed-card-slot.is-opening .holo-card {
@@ -986,6 +1012,10 @@
   --reveal-start-y: 0px;
   --reveal-start-rotate: 0deg;
   --reveal-start-scale: .28;
+  --reveal-current-x: 0px;
+  --reveal-current-y: 0px;
+  --reveal-current-rotate: 0deg;
+  --reveal-current-scale: 1;
   position: relative;
   width: min(92vw, 760px);
   min-height: min(86vh, 760px);
@@ -1000,7 +1030,7 @@
   align-self: center;
   transform: translate(var(--reveal-start-x), var(--reveal-start-y)) rotateZ(var(--reveal-start-rotate)) scale(var(--reveal-start-scale));
   transform-origin: 50% 50%;
-  transition: transform 1700ms cubic-bezier(.12, .78, .12, 1);
+  transition: transform 1720ms cubic-bezier(.12, .78, .12, 1);
   will-change: transform;
   backface-visibility: hidden;
   transform-style: preserve-3d;
@@ -1009,6 +1039,15 @@
 
 .card-reveal-overlay.is-revealed .reveal-card-wrap {
   transform: translate(0, 0) rotateZ(0deg) scale(1);
+}
+
+.card-reveal-overlay.is-outgoing .reveal-card-wrap {
+  transform: translate(var(--reveal-current-x), var(--reveal-current-y)) rotateZ(var(--reveal-current-rotate)) scale(var(--reveal-current-scale));
+}
+
+.card-reveal-overlay.is-outgoing.is-closing .reveal-card-wrap,
+.card-reveal-overlay.is-outgoing.reveal-mode-flipZoom.is-closing .reveal-card-wrap {
+  transform: translate(var(--reveal-start-x), var(--reveal-start-y)) rotateZ(var(--reveal-start-rotate)) scale(var(--reveal-start-scale));
 }
 
 .reveal-mode-flipZoom .reveal-card-wrap {
@@ -1038,7 +1077,12 @@
 }
 
 .card-reveal-overlay:not(.is-settled) .holo-card {
-  pointer-events: none;
+  --card-scale: 1 !important;
+  --rotate-x: 0deg !important;
+  --rotate-y: 0deg !important;
+  --card-opacity: .36 !important;
+  --glare-opacity: .12 !important;
+  pointer-events: auto;
 }
 
 .card-reveal-overlay:not(.is-settled) .art-foil-layer,
@@ -1336,28 +1380,38 @@
 .holo-card:not(.is-flipped).holo-grade-her .frame-foil-layer,
 .holo-card:not(.is-flipped).holo-grade-leg .frame-foil-layer,
 .holo-card:not(.is-flipped).holo-grade-myt .frame-foil-layer {
-  opacity: calc((.42 + var(--card-opacity) * .38) * var(--holo-intensity));
+  opacity: calc((.24 + var(--card-opacity) * .34) * var(--holo-intensity));
   background:
+    radial-gradient(
+      ellipse at var(--pointer-x) var(--pointer-y),
+      rgba(255,255,255,.4),
+      transparent 20%
+    ),
     linear-gradient(
-      calc(98deg + (var(--pointer-from-left) - .5) * 42deg),
-      transparent 0 24%,
-      rgba(255,255,255,.58) 29%,
-      var(--holo-edge) 33%,
-      transparent 41% 56%,
-      rgba(255,255,255,.42) 61%,
-      transparent 69%
+      calc(104deg + (var(--pointer-from-left) - .5) * 30deg),
+      transparent 0 27%,
+      rgba(255,255,255,.4) 32%,
+      color-mix(in srgb, var(--holo-edge), transparent 30%) 37%,
+      transparent 46% 58%,
+      rgba(255,255,255,.26) 64%,
+      transparent 73%
     ),
     conic-gradient(
-      from calc((var(--pointer-from-left) - .5) * 140deg),
+      from calc((var(--pointer-from-left) - .5) * 110deg),
       transparent,
-      var(--holo-edge),
-      rgba(255,255,255,.48),
+      color-mix(in srgb, var(--holo-edge), transparent 48%),
+      rgba(255,255,255,.32),
       transparent,
-      var(--holo-edge),
+      color-mix(in srgb, var(--holo-edge), transparent 58%),
       transparent
     );
-  background-size: 260% 260%, 180% 180%;
-  mix-blend-mode: screen;
+  background-position:
+    var(--pointer-x) var(--pointer-y),
+    var(--background-x) var(--background-y),
+    calc(100% - var(--background-x)) calc(100% - var(--background-y));
+  background-size: 155% 155%, 270% 270%, 190% 190%;
+  background-blend-mode: soft-light, screen, overlay;
+  mix-blend-mode: soft-light;
 }
 
 .holo-card:not(.is-flipped).holo-grade-adv .art-foil-layer,
@@ -3521,6 +3575,68 @@
 .sealed-card-slot.is-opened:not(.is-opening) .holo-card:not(.is-flipped).holo-grade-myt .card-front::after {
   display: none;
   animation: none;
+}
+
+@media (pointer: coarse), (max-width: 760px) {
+  .sealed-card-slot .holo-card {
+    box-shadow: 0 10px 22px rgba(0,0,0,.3);
+  }
+
+  .sealed-card-slot .holo-card.is-low-quality .card-face {
+    box-shadow:
+      0 10px 24px rgba(0,0,0,.34),
+      0 0 10px color-mix(in srgb, var(--holo-edge), transparent 56%);
+  }
+
+  .sealed-card-slot .holo-card.is-low-quality .grain-layer,
+  .sealed-card-slot .holo-card.is-low-quality .glitter-layer {
+    display: none;
+  }
+
+  .sealed-card-slot .holo-card.is-low-quality .art-foil-layer,
+  .sealed-card-slot .holo-card.is-low-quality .spectrum-layer {
+    opacity: calc(var(--card-opacity) * var(--holo-intensity) * .28);
+    filter: none;
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
+
+  .sealed-card-slot .holo-card.is-low-quality .frame-foil-layer {
+    opacity: calc(var(--card-opacity) * var(--holo-intensity) * .44);
+    filter: none;
+  }
+
+  .sealed-card-slot .holo-card.is-low-quality .glare-layer {
+    opacity: calc(var(--glare-opacity) * var(--holo-intensity) * .42);
+  }
+
+  .sealed-card-slot .holo-card.is-low-quality .edge-light-layer {
+    opacity: calc(.32 + var(--card-opacity) * .34);
+    filter: none;
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--holo-accent), white 10%),
+      0 0 8px color-mix(in srgb, var(--holo-edge), transparent 42%);
+  }
+
+  .sealed-card-slot.is-opening .holo-card.is-low-quality {
+    will-change: transform;
+  }
+
+  .sealed-card-slot.is-opening .holo-card.is-low-quality::before,
+  .sealed-card-slot.is-opening .holo-card.is-low-quality::after,
+  .sealed-card-slot.is-opening .holo-card.is-low-quality .card-front::before,
+  .sealed-card-slot.is-opening .holo-card.is-low-quality .card-front::after {
+    filter: none !important;
+    box-shadow: none;
+    will-change: opacity, transform;
+  }
+
+  .sealed-card-slot.is-opened:not(.is-opening) .holo-card.is-low-quality::before,
+  .sealed-card-slot.is-opened:not(.is-opening) .holo-card.is-low-quality::after,
+  .sealed-card-slot.is-opened:not(.is-opening) .holo-card.is-low-quality .card-front::before,
+  .sealed-card-slot.is-opened:not(.is-opening) .holo-card.is-low-quality .card-front::after {
+    animation: none !important;
+  }
 }
 
 @keyframes mythicOpenCoverShort {

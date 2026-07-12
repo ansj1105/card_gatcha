@@ -24,10 +24,9 @@ type UseCardTiltOptions = {
   disabled?: boolean;
   interactive?: boolean;
   autoDemo?: boolean;
-  gyroTilt?: Partial<Pick<TiltState, "rotateX" | "rotateY" | "pointerX" | "pointerY">> | null;
 };
 
-export function useCardTilt({ disabled, interactive = true, autoDemo, gyroTilt }: UseCardTiltOptions) {
+export function useCardTilt({ disabled, interactive = true, autoDemo }: UseCardTiltOptions) {
   const nodeRef = useRef<HTMLButtonElement | null>(null);
   const frameRef = useRef<number | null>(null);
   const targetRef = useRef<TiltState>(neutralTilt);
@@ -85,17 +84,6 @@ export function useCardTilt({ disabled, interactive = true, autoDemo, gyroTilt }
     if (leaveTimerRef.current) window.clearTimeout(leaveTimerRef.current);
     leaveTimerRef.current = window.setTimeout(reset, 80);
   }, [reset]);
-
-  useEffect(() => {
-    if (!gyroTilt || disabled || !interactive) return;
-    const x = clamp(gyroTilt.pointerX ?? 0.5, 0, 1);
-    const y = clamp(gyroTilt.pointerY ?? 0.5, 0, 1);
-    const next = pointToTilt(x, y, true);
-    next.rotateX = clamp(gyroTilt.rotateX ?? next.rotateX, -maxRotation, maxRotation);
-    next.rotateY = clamp(gyroTilt.rotateY ?? next.rotateY, -maxRotation, maxRotation);
-    setActive(true);
-    schedule(next);
-  }, [disabled, gyroTilt, interactive, schedule]);
 
   useEffect(() => {
     if (!autoDemo || active || disabled) return;

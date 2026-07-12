@@ -30,7 +30,6 @@ export type HoloCardProps = {
   alt: string;
   interactive?: boolean;
   autoDemo?: boolean;
-  enableGyro?: boolean;
   flipped?: boolean;
   disabled?: boolean;
   onClick?: (event: MouseEvent<HTMLButtonElement>) => void;

@@ -2,7 +2,6 @@ import type { CSSProperties, MouseEvent } from "react";
 import { holoPresets } from "./holoPresets";
 import type { HoloCardProps } from "./types";
 import { useCardTilt } from "./useCardTilt";
-import { useDeviceOrientation } from "./useDeviceOrientation";
 import "./HoloCard.css";
 
 export function HoloCard({
@@ -15,7 +14,6 @@ export function HoloCard({
   alt,
   interactive = true,
   autoDemo = false,
-  enableGyro = false,
   flipped = false,
   disabled = false,
   onClick,
@@ -23,18 +21,13 @@ export function HoloCard({
   effect = "prism"
 }: HoloCardProps) {
   const preset = holoPresets[grade];
-  const gyro = useDeviceOrientation(Boolean(enableGyro && interactive && !disabled));
   const { active, cardRef, tiltStyle, pointerHandlers } = useCardTilt({
     disabled,
     interactive,
-    autoDemo,
-    gyroTilt: gyro.tilt
+    autoDemo
   });
 
-  const handleClick = async (event: MouseEvent<HTMLButtonElement>) => {
-    if (enableGyro && gyro.permission === "prompt") {
-      await gyro.requestPermission();
-    }
+  const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
     onClick?.(event);
   };
 
@@ -74,11 +67,11 @@ export function HoloCard({
       <span className="card-translator">
         <span className="card-rotator">
           <span className="card-face card-back" aria-hidden={!flipped}>
-            {backSrc ? <img className="base-card-image" src={backSrc} alt="" draggable={false} /> : <span className="holo-card-back-mark">K</span>}
+            {backSrc ? <img className="base-card-image" src={backSrc} alt="" draggable={false} decoding="async" /> : <span className="holo-card-back-mark">K</span>}
           </span>
 
           <span className="card-face card-front" aria-hidden={flipped}>
-            <img className="base-card-image" src={frontSrc} alt="" draggable={false} />
+            <img className="base-card-image" src={frontSrc} alt="" draggable={false} decoding="async" />
             <span className="art-foil-layer" />
             <span className="frame-foil-layer" />
             <span className="spectrum-layer" />

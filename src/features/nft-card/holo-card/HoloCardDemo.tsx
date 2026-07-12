@@ -23,11 +23,15 @@ const effectOptions: { id: HoloEffect; label: string }[] = [
   { id: "shatter", label: "Shatter" }
 ];
 
+const hasOpenEffect = (card: (typeof demoCards)[number]) => !["COM", "MID"].includes(card.grade);
 const asset = (path: string) => `${import.meta.env.BASE_URL}${path}`;
-const cardBackSrc = asset("assets/nft-card/cards/back/korion-card-back.webp");
+
+const previewBackSrc = asset("assets/nft-card/cards/preview/korion-card-back-preview.jpg");
+const fullBackSrc = asset("assets/nft-card/cards/back/korion-card-back.webp");
 const foilMaskSrc = asset("assets/nft-card/masks/korion-foil-mask.png");
 const frameMaskSrc = asset("assets/nft-card/masks/korion-frame-mask.png");
 const artMaskSrc = asset("assets/nft-card/masks/korion-art-mask.png");
+const revealTransitionSeconds = 1.72;
 
 type RevealStart = {
   x: number;
@@ -39,6 +43,7 @@ type RevealStart = {
 type OutgoingReveal = {
   cardId: string;
   start: RevealStart;
+  current: RevealStart;
   mode: "zoom" | "flipZoom";
   closing: boolean;
 };
@@ -56,7 +61,6 @@ export function HoloCardDemo() {
   const [outgoingReveal, setOutgoingReveal] = useState<OutgoingReveal | null>(null);
   const [interactive, setInteractive] = useState(true);
   const [autoDemo, setAutoDemo] = useState(false);
-  const [enableGyro, setEnableGyro] = useState(false);
   const [quality, setQuality] = useState<HoloQuality>("high");
   const [effect, setEffect] = useState<HoloEffect>("premium");
   const openTimelinesRef = useRef<Map<string, ReturnType<typeof gsap.timeline>>>(new Map());
@@ -66,6 +70,12 @@ export function HoloCardDemo() {
   const incomingStartFrameRef = useRef<number | null>(null);
   const selectedCard = demoCards.find((card) => card.id === (focusedCardId ?? cardId)) ?? demoCards[0];
   const preset = holoPresets[selectedCard.grade];
+
+  const getRevealCardWidth = () => {
+    const viewportWidth = window.innerWidth;
+    const maxWidth = window.matchMedia("(max-width: 820px)").matches ? 340 : 430;
+    return Math.min(viewportWidth * 0.78, maxWidth);
+  };
 
   useEffect(() => () => {
     openTimelinesRef.current.forEach((timeline) => timeline.kill());
@@ -104,11 +114,13 @@ export function HoloCardDemo() {
     setCardId(id);
     const index = demoCards.findIndex((card) => card.id === id);
     const slotRotate = (index - 3) * 1.8;
+    const revealWidth = getRevealCardWidth();
+    revealCloseCallRef.current?.kill();
     setRevealStart({
       x: rect.left + rect.width / 2 - window.innerWidth / 2,
       y: rect.top + rect.height / 2 - window.innerHeight / 2,
       rotate: slotRotate,
-      scale: Math.max(0.18, Math.min(0.42, rect.width / 430))
+      scale: Math.max(0.18, Math.min(0.5, rect.width / revealWidth))
     });
     setRevealMode(forcedMode ?? (Math.random() < 0.48 ? "flipZoom" : "zoom"));
     setFocusedClosing(false);
@@ -117,7 +129,20 @@ export function HoloCardDemo() {
     setFocusedCardId(id);
     revealSettledCallRef.current?.kill();
     window.requestAnimationFrame(() => setFocusedVisible(true));
-    revealSettledCallRef.current = gsap.delayedCall(1.72, () => setFocusedSettled(true));
+    revealSettledCallRef.current = gsap.delayedCall(revealTransitionSeconds, () => setFocusedSettled(true));
+  };
+
+  const getCurrentRevealFrame = (): RevealStart => {
+    const wrap = document.querySelector<HTMLElement>(".card-reveal-overlay:not(.is-outgoing) .reveal-card-wrap");
+    if (!wrap) return { x: 0, y: 0, rotate: 0, scale: 1 };
+
+    const rect = wrap.getBoundingClientRect();
+    return {
+      x: rect.left + rect.width / 2 - window.innerWidth / 2,
+      y: rect.top + rect.height / 2 - window.innerHeight / 2,
+      rotate: 0,
+      scale: Math.max(0.18, Math.min(1.05, rect.width / getRevealCardWidth()))
+    };
   };
 
   const startOutgoingReveal = () => {
@@ -126,13 +151,14 @@ export function HoloCardDemo() {
     setOutgoingReveal({
       cardId: focusedCardId,
       start: revealStart,
+      current: getCurrentRevealFrame(),
       mode: revealMode,
       closing: false
     });
     window.requestAnimationFrame(() => {
       setOutgoingReveal((current) => current ? { ...current, closing: true } : current);
     });
-    outgoingClearCallRef.current = gsap.delayedCall(1.82, () => setOutgoingReveal(null));
+    outgoingClearCallRef.current = gsap.delayedCall(revealTransitionSeconds, () => setOutgoingReveal(null));
   };
 
   const closeFocusedCard = (afterClose?: () => void) => {
@@ -141,7 +167,7 @@ export function HoloCardDemo() {
     setFocusedVisible(false);
     revealSettledCallRef.current?.kill();
     revealCloseCallRef.current?.kill();
-    revealCloseCallRef.current = gsap.delayedCall(1.82, () => {
+    revealCloseCallRef.current = gsap.delayedCall(revealTransitionSeconds, () => {
       setFocusedCardId(null);
       setFocusedClosing(false);
       setFocusedSettled(false);
@@ -150,20 +176,18 @@ export function HoloCardDemo() {
   };
 
   const handleSmallCardClick = (id: string, event: MouseEvent<HTMLButtonElement>) => {
-    if (focusedClosing || outgoingReveal) return;
-
     setCardId(id);
     const card = demoCards.find((item) => item.id === id);
+    const rect = event.currentTarget.getBoundingClientRect();
 
     if (focusedCardId && focusedCardId !== id) {
-      const rect = event.currentTarget.getBoundingClientRect();
       if (!openedCardIds.has(id)) {
         startOutgoingReveal();
         setFocusedCardId(null);
         setFocusedVisible(false);
         setFocusedClosing(false);
         setFocusedSettled(false);
-        if (card) {
+        if (card && hasOpenEffect(card)) {
           runOpenTimeline(card);
         }
         setOpenedCardIds((current) => {
@@ -188,7 +212,7 @@ export function HoloCardDemo() {
     }
 
     if (!openedCardIds.has(id)) {
-      if (card) {
+      if (card && hasOpenEffect(card)) {
         runOpenTimeline(card);
       }
       setOpenedCardIds((current) => {
@@ -199,11 +223,31 @@ export function HoloCardDemo() {
       return;
     }
 
-    const rect = event.currentTarget.getBoundingClientRect();
+    if (outgoingReveal || focusedClosing) {
+      setFocusedClosing(false);
+      setFocusedSettled(false);
+      setFocusedCardId(null);
+      setFocusedVisible(false);
+    }
+
     revealCardFromRect(id, rect);
   };
 
   const closeCard = () => {
+    closeFocusedCard();
+  };
+
+  const toggleFocusedCard = () => {
+    if (focusedClosing) {
+      revealCloseCallRef.current?.kill();
+      revealSettledCallRef.current?.kill();
+      setFocusedClosing(false);
+      setFocusedVisible(true);
+      setFocusedSettled(false);
+      revealSettledCallRef.current = gsap.delayedCall(revealTransitionSeconds, () => setFocusedSettled(true));
+      return;
+    }
+
     closeFocusedCard();
   };
 
@@ -225,7 +269,7 @@ export function HoloCardDemo() {
 
   const openAllCards = () => {
     demoCards.forEach((card) => {
-      if (!openedCardIds.has(card.id)) {
+      if (!openedCardIds.has(card.id) && hasOpenEffect(card)) {
         runOpenTimeline(card);
       }
     });
@@ -247,11 +291,11 @@ export function HoloCardDemo() {
             style={{ "--slot-index": index, "--slot-offset": Math.abs(index - 3) } as CSSProperties}
           >
             <HoloCard
-              frontSrc={card.frontSrc}
-              backSrc={cardBackSrc}
+              frontSrc={card.previewSrc}
+              backSrc={previewBackSrc}
               grade={card.grade}
               alt={`Open ${card.grade} KORION card`}
-              interactive
+              interactive={interactive}
               autoDemo={false}
               flipped={!openedCardIds.has(card.id)}
               quality="low"
@@ -300,9 +344,6 @@ export function HoloCardDemo() {
           <button type="button" aria-pressed={autoDemo} onClick={() => setAutoDemo((value) => !value)}>
             Auto {autoDemo ? "On" : "Off"}
           </button>
-          <button type="button" aria-pressed={enableGyro} onClick={() => setEnableGyro((value) => !value)}>
-            Gyro {enableGyro ? "On" : "Off"}
-          </button>
           <button type="button" onClick={() => setQuality((value) => (value === "high" ? "low" : "high"))}>
             Quality {quality}
           </button>
@@ -331,13 +372,17 @@ export function HoloCardDemo() {
                 "--reveal-start-x": `${outgoingReveal.start.x}px`,
                 "--reveal-start-y": `${outgoingReveal.start.y}px`,
                 "--reveal-start-rotate": `${outgoingReveal.start.rotate}deg`,
-                "--reveal-start-scale": outgoingReveal.start.scale
+                "--reveal-start-scale": outgoingReveal.start.scale,
+                "--reveal-current-x": `${outgoingReveal.current.x}px`,
+                "--reveal-current-y": `${outgoingReveal.current.y}px`,
+                "--reveal-current-rotate": `${outgoingReveal.current.rotate}deg`,
+                "--reveal-current-scale": outgoingReveal.current.scale
               } as CSSProperties}
             >
               <div className="reveal-card-wrap">
                 <HoloCard
                   frontSrc={outgoingCard.frontSrc}
-                  backSrc={cardBackSrc}
+                  backSrc={fullBackSrc}
                   foilMaskSrc={foilMaskSrc}
                   frameMaskSrc={frameMaskSrc}
                   artMaskSrc={artMaskSrc}
@@ -345,7 +390,6 @@ export function HoloCardDemo() {
                   alt={`KORION ${outgoingCard.grade} ${outgoingCard.name} holographic card`}
                   interactive={false}
                   autoDemo={false}
-                  enableGyro={false}
                   flipped={false}
                   quality={quality}
                   effect={effect}
@@ -383,7 +427,7 @@ export function HoloCardDemo() {
             <div className="reveal-card-wrap">
               <HoloCard
                 frontSrc={selectedCard.frontSrc}
-                backSrc={cardBackSrc}
+                backSrc={fullBackSrc}
                 foilMaskSrc={foilMaskSrc}
                 frameMaskSrc={frameMaskSrc}
                 artMaskSrc={artMaskSrc}
@@ -391,11 +435,10 @@ export function HoloCardDemo() {
                 alt={`KORION ${selectedCard.grade} ${selectedCard.name} holographic card`}
                 interactive={interactive}
                 autoDemo={autoDemo || !interactive}
-                enableGyro={enableGyro}
                 flipped={false}
                 quality={quality}
                 effect={effect}
-                onClick={closeCard}
+                onClick={toggleFocusedCard}
               />
             </div>
             <div className="reveal-copy">
